@@ -1,21 +1,20 @@
 import { Audio } from 'expo-av'
 import React, { Component } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard, Button } from 'react-native'
-import Modal from 'react-native-modal'
 import { Ionicons } from '@expo/vector-icons'
+import { AppLoading } from 'expo'
+import * as Font from 'expo-font'
 import YouTubeAPI from 'youtube-api-search'
 import Youtube from 'youtube-stream-url'
 import { YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2 } from '@env';
 
-import Header from './src/components/header/Header'
-
-
 const keylist = [YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2];
-console.log(keylist)
+
 export default class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
+      isfontsLoaded: false,
       isModalVisible: false,
       search: "",
       isPlaying: false,
@@ -24,9 +23,13 @@ export default class App extends Component {
       songs: []
     }
   }
-
-
-  async componentDidMount() {
+  
+  componentDidMount = async() => {
+    await Font.loadAsync({
+      'SanomatSansLight': require('./assets/fonts/sanomat-sans-cufonfonts/Sanomat-SansLight.otf'),
+      'SanomatSansRegular': require('./assets/fonts/sanomat-sans-cufonfonts/Sanomat-SansRegular.otf'),
+    })
+    this.setState({ isfontsLoaded: true });
     try {
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -142,7 +145,7 @@ export default class App extends Component {
     let { playbackInstance, currentIndex, songs } = this.state
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
-      currentIndex < songs.length - 1 ? (currentIndex -= 1) : (currentIndex = 0)
+      currentIndex > 0 ? (currentIndex -= 1) : (currentIndex = songs.length - 1)
       this.setState({
         currentIndex
       })
@@ -163,53 +166,57 @@ export default class App extends Component {
   }
 
   render() {
-    let { currentIndex , songs } = this.state
-    if (songs[currentIndex] != undefined) {
-      var thumbnails = songs[currentIndex].thumbnails
-      var title = songs[currentIndex].title
+    if (!this.state.isfontsLoaded) {
+      return <AppLoading />
     } else {
-      var thumbnails = 'https://i.pinimg.com/564x/bd/2b/50/bd2b502137f9397cb0edd383ce9d130c.jpg'
-      var title = 'Kanna The Cute Dragon'
-    }
-    return(
-      <View style={styles.container}>
-        <TextInput
-          style={styles.searchbar}
-          placeholder="Type Here..."
-          onChangeText={this.updateSearch}
-          value={this.state.search}
-        />
-        <TouchableOpacity style={styles.searchbtn} onPress={this.handleSearch}>
-          <Ionicons name='ios-search' size={40} color='#444' />
-        </TouchableOpacity>
+      let { currentIndex , songs } = this.state
+      if (songs[currentIndex] != undefined) {
+        var thumbnails = songs[currentIndex].thumbnails
+        var title = songs[currentIndex].title
+      } else {
+        var thumbnails = 'https://i.pinimg.com/564x/bd/2b/50/bd2b502137f9397cb0edd383ce9d130c.jpg'
+        var title = 'Kanna The Cute Dragon'
+      }
+      return(
+        <View style={styles.container}>
+          <TextInput
+            style={styles.searchbar}
+            placeholder="Type Here..."
+            onChangeText={this.updateSearch}
+            value={this.state.search}
+          />
+          <TouchableOpacity style={styles.searchbtn} onPress={this.handleSearch}>
+            <Ionicons name='ios-search' size={40} color='#444' />
+          </TouchableOpacity>
 
-        <Image
-          style={styles.albumCover}
-          source={{ uri: thumbnails }}
-        />
-        <View style={styles.trackInfo}>
-          <Text style={[styles.trackInfoText, styles.largeText]}>
-            {title}
-          </Text>
-        </View> 
-        <View style={styles.controls}>
-          <TouchableOpacity style={styles.control} onPress={this.handlePreviousTrack}>
-            <Ionicons name='ios-skip-backward' size={40} color='#444' style={styles.controlbtn} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.control} onPress={this.handlePlayPause}>
-            {this.state.isPlaying ? (
-              <Ionicons name='md-pause' size={50} color='#444' style={styles.pausebtn} />
-                ) : (
-              <Ionicons name='ios-play-circle' size={80} color='#444' />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.control} onPress={this.handleNextTrack}>
-            <Ionicons name='ios-skip-forward' size={40} color='#444' style={styles.controlbtn} />
-          </TouchableOpacity>
+          <Image
+            style={styles.albumCover}
+            source={{ uri: thumbnails }}
+          />
+          <View style={styles.trackInfo}>
+            <Text style={[styles.trackInfoText, styles.largeText]}>
+              {title}
+            </Text>
+          </View> 
+          <View style={styles.controls}>
+            <TouchableOpacity style={styles.control} onPress={this.handlePreviousTrack}>
+              <Ionicons name='ios-skip-backward' size={40} color='#444' style={styles.controlbtn} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.control} onPress={this.handlePlayPause}>
+              {this.state.isPlaying ? (
+                <Ionicons name='md-pause' size={50} color='#444' style={styles.pausebtn} />
+                  ) : (
+                <Ionicons name='ios-play-circle' size={80} color='#444' />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.control} onPress={this.handleNextTrack}>
+              <Ionicons name='ios-skip-forward' size={40} color='#444' style={styles.controlbtn} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    )
-  };
+      )
+    };
+  }
 };
 
 const styles = StyleSheet.create({
@@ -225,6 +232,7 @@ const styles = StyleSheet.create({
     marginTop: 50,
     marginBottom: 20,
     width: "100%",
+    fontFamily: 'SanomatSansRegular'
   },
   container: {
     flex: 1,
@@ -260,7 +268,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 50
+    marginTop: 50,
+    fontFamily: 'SanomatSansLight'
   },
   trackInfo: {
     width: '60%',
