@@ -2,7 +2,7 @@ import { Audio } from 'expo-av'
 import { AppLoading } from 'expo'
 import React, { Component } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard, Button, StatusBar } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { setCustomText } from 'react-native-global-props';
 import * as Font from 'expo-font'
 import YouTubeAPI from 'youtube-api-search'
@@ -15,6 +15,7 @@ export default class Home extends Component {
   constructor (props) {
     super(props)
     this.state = {
+      loopMode: 'one',
       isModalVisible: false,
       isfontsLoaded: false,
       search: "",
@@ -52,6 +53,20 @@ export default class Home extends Component {
     }
   }
 
+  onPlaybackStatusUpdate = async(playbackStatus) => {
+    let { loopMode, playbackInstance } = this.state
+    if (playbackStatus.didJustFinish) {
+      if (loopMode == 'off') {
+        await playbackInstance.pauseAsync()
+        this.setState({ isPlaying: false })
+      } else if (loopMode == 'all') {
+        this.handleNextTrack()
+      } else if (loopMode == 'one') {
+        await playbackInstance.replayAsync()
+      }
+    }
+  };
+
   async loadAudio() {
     const {currentIndex, isPlaying} = this.state
 
@@ -65,7 +80,7 @@ export default class Home extends Component {
         shouldPlay: isPlaying
       }
   
-      playbackInstance.setOnPlaybackStatusUpdate()     
+      playbackInstance.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)     
       await playbackInstance.loadAsync(source, status, false)
       this.setState({playbackInstance})
     } catch (e) {
@@ -123,10 +138,7 @@ export default class Home extends Component {
                     this.loadAudio().then(() => {
                       const { playbackInstance } = this.state
                       playbackInstance.playAsync()
-    
-                      this.setState({
-                        isPlaying: true
-                      })
+                      this.setState({ isPlaying: true })
                     })
                   } catch (e) {
                     console.log(e);
@@ -158,7 +170,11 @@ export default class Home extends Component {
       this.setState({
         currentIndex
       })
-      this.loadAudio()
+      this.loadAudio().then(() => {
+        let { playbackInstance } = this.state
+        playbackInstance.playAsync()
+        this.setState({ isPlaying: true })
+      })
     }
   }
 
@@ -170,8 +186,23 @@ export default class Home extends Component {
       this.setState({
         currentIndex
       })
-      this.loadAudio()
+      this.loadAudio().then(() => {
+        let { playbackInstance } = this.state
+        playbackInstance.playAsync()
+        this.setState({ isPlaying: true })
+      })
     }
+  }
+
+  handleChangeloopMode = () => {
+    let loopModeList = ['all', 'one', 'off']
+    let { loopMode } = this.state
+    let modeIndex = loopModeList.indexOf(loopMode)
+
+    modeIndex < loopModeList.length - 1 ? (modeIndex += 1) : (modeIndex = 0)
+    this.setState({
+      loopMode: loopModeList[modeIndex]
+    })
   }
 
   render() {
@@ -193,6 +224,8 @@ export default class Home extends Component {
           style={styles.searchbar}
           placeholder="Type Here..."
           onChangeText={this.updateSearch}
+          onSubmitEditing={this.handleSearch}
+          returnKeyType='search'
           value={this.state.search}
         />
         <TouchableOpacity style={styles.searchbtn} onPress={this.handleSearch}>
@@ -223,6 +256,19 @@ export default class Home extends Component {
             <Ionicons name='ios-skip-forward' size={40} color='#444' style={styles.controlbtn} />
           </TouchableOpacity>
         </View>
+        <View style={styles.bottomBar}>
+          <TouchableOpacity onPress={this.handleChangeloopMode} style={{ paddingHorizontal: 15, paddingBottom: 10 }} >
+            {
+              this.state.loopMode == 'all' ? (
+                <MaterialCommunityIcons name="repeat" size={25} color="#444" />
+              ) : this.state.loopMode == 'one' ? (
+                <MaterialCommunityIcons name="repeat-once" size={25} color="#444" />
+              ) : (
+                <MaterialCommunityIcons name="repeat-off" size={25} color="#444" />
+              )
+            }
+          </TouchableOpacity>
+        </View>
       </View>
     )
   };
@@ -249,8 +295,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   albumCover: {
-    width: 275,
-    height: 275,
+    width: 260,
+    height: 260,
     borderRadius: 25
   },
   controls: {
@@ -282,6 +328,10 @@ const styles = StyleSheet.create({
   },
   trackInfo: {
     width: '70%',
-    minHeight: '25%'
+    minHeight: '20%'
+  },
+  bottomBar: {
+    textAlign: 'center',
+    paddingTop: 10
   }
 })
