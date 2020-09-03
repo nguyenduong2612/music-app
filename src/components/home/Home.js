@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     minHeight: '20%'
   },
   bottomBar: {
-    textAlign: 'center',
+    alignItems: 'center',
     paddingTop: 10
   }
 })
