@@ -16,6 +16,7 @@ export default class Home extends Component {
     super(props)
     this.state = {
       loopMode: 'one',
+      isShuffle: false,
       isModalVisible: false,
       isfontsLoaded: false,
       search: "",
@@ -182,10 +183,16 @@ export default class Home extends Component {
     let { playbackInstance, currentIndex, songs } = this.state
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
-      currentIndex < songs.length - 1 ? (currentIndex += 1) : (currentIndex = 0)
-      this.setState({
-        currentIndex
-      })
+      if (this.state.isShuffle) {
+        let indexArray = [...Array(songs.length).keys()]      //create index array [0...songs.length]
+        indexArray.splice(currentIndex, 1)                    //remove index of current song
+        currentIndex = indexArray[Math.floor(Math.random() * indexArray.length)]    //get new random index from the array
+        this.setState({ currentIndex })
+      } else {
+        currentIndex < songs.length - 1 ? (currentIndex += 1) : (currentIndex = 0)
+        this.setState({ currentIndex })
+      }
+
       this.loadAudio().then(() => {
         let { playbackInstance } = this.state
         playbackInstance.playAsync()
@@ -205,6 +212,15 @@ export default class Home extends Component {
     })
   }
 
+  handleChangeShuffle = () => {
+    let { isShuffle, songs } = this.state
+
+    this.setState({
+      isShuffle: !isShuffle
+    })
+  }
+
+
   render() {
     if (!this.state.isfontsLoaded) {
       return <AppLoading />
@@ -222,14 +238,14 @@ export default class Home extends Component {
         <StatusBar backgroundColor='#c6afd1' barStyle='light-content' />
         <TextInput
           style={styles.searchbar}
-          placeholder="Type Here..."
+          placeholder="Adding a song"
           onChangeText={this.updateSearch}
           onSubmitEditing={this.handleSearch}
           returnKeyType='search'
           value={this.state.search}
         />
         <TouchableOpacity style={styles.searchbtn} onPress={this.handleSearch}>
-          <Ionicons name='ios-search' size={40} color='#444' />
+          <Ionicons name='ios-add' size={40} color='#444' />
         </TouchableOpacity>
 
         <Image
@@ -257,7 +273,10 @@ export default class Home extends Component {
           </TouchableOpacity>
         </View>
         <View style={styles.bottomBar}>
-          <TouchableOpacity onPress={this.handleChangeloopMode} style={{ paddingHorizontal: 15, paddingBottom: 10 }} >
+          <TouchableOpacity style={styles.bottomBarItem}>
+            <Ionicons name="ios-heart" size={25} color="#444" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={this.handleChangeloopMode} style={styles.bottomBarItem}>
             {
               this.state.loopMode == 'all' ? (
                 <MaterialCommunityIcons name="repeat" size={25} color="#444" />
@@ -267,6 +286,18 @@ export default class Home extends Component {
                 <MaterialCommunityIcons name="repeat-off" size={25} color="#444" />
               )
             }
+          </TouchableOpacity>
+          <TouchableOpacity onPress={this.handleChangeShuffle} style={styles.bottomBarItem}>
+            {
+              !this.state.isShuffle ? (
+                <MaterialCommunityIcons name="shuffle-disabled" size={25} color="#444" />
+              ) : (
+                <MaterialCommunityIcons name="shuffle" size={25} color="#444" />
+              )
+            }
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.bottomBarItem}>
+            <Ionicons name="ios-more" size={25} color="#444" />
           </TouchableOpacity>
         </View>
       </View>
@@ -332,6 +363,12 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     alignItems: 'center',
-    paddingTop: 10
+    paddingTop: 10,
+    flexDirection: 'row'
+  },
+  bottomBarItem: {
+    paddingHorizontal: 25,
+    marginHorizontal: 5,
+    paddingBottom: 10
   }
 })
