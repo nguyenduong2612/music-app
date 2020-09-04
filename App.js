@@ -1,4 +1,4 @@
-import React, { Component, lazy } from 'react'
+import React, { Component } from 'react'
 import { StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
@@ -10,7 +10,10 @@ import Playlist from './src/components/playlist/Playlist'
 const Tab = createMaterialTopTabNavigator()
 export default class App extends React.Component {
   state = {
-    isfontsLoaded: false
+    isfontsLoaded: false,
+    currentIndex: 0,
+    playbackInstance: null,
+    songs: []
   }
   
   componentDidMount = async() => {
@@ -35,15 +38,26 @@ export default class App extends React.Component {
               fontFamily: 'SanomatSansRegular',
             }
           }}
-          lazy={true}
         >
           <Tab.Screen 
             name="Home" 
-            component={Home}
+            children={()=><Home
+              currentIndex={this.state.currentIndex}
+              songs={this.state.songs}
+              playbackInstance={this.state.playbackInstance}
+              updateCurrentIndex={(currentIndex) => this.setState({currentIndex})}
+              updateSongs={(songs) => this.setState({songs})} 
+              updatePlaybackInstance={(playbackInstance) => this.setState({playbackInstance})} />}
           />
           <Tab.Screen 
             name="Playlist" 
-            component={Playlist} 
+            children={()=><Playlist
+              currentIndex={this.state.currentIndex}
+              songs={this.state.songs}
+              playbackInstance={this.state.playbackInstance}
+              updateCurrentIndex={(currentIndex) => this.setState({currentIndex})}
+              updateSongs={(songs) => this.setState({songs})}
+              updatePlaybackInstance={(playbackInstance) => this.setState({playbackInstance})} />}
           />
         </Tab.Navigator>
       </NavigationContainer>
