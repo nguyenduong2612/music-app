@@ -1,26 +1,41 @@
 import React, { Component } from 'react'
-import { StyleSheet, View, Text } from 'react-native'
+import { Audio } from 'expo-av'
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native'
 import PlaylistItem from './PlaylistItem'
+import Home from '../home/Home'
 
 export default class Playlist extends Component {
-	render() {
-		const { state, setParams, navigate } = this.props.navigation;
-		const params = state.params || {};
-		const songs = params.songs
-		// const songs = JSON.stringify(navigation.getParam('songs', 'default'));
-		// console.log(songs)
+	constructor (props) {
+		super(props)
+	}
+	
+	handlePlaySong = (songIndex) => {
+		// sending songIndex and click event to home
+		const { navigate } = this.props.navigation;
+		navigate('Home', {  
+			songIndex: songIndex,
+			click: true
+		}) 
+	}
+
+	render() {		
+		if (this.props.route.params != undefined) {
+			var songs = this.props.route.params.songs
+		}
     return (
-			<View style={{ flex: 1, alignItems: 'center', marginTop: 10 }}>
+			<View style={{ flex: 1, alignItems: 'center', paddingTop: 10, backgroundColor: '#fff' }}>
+				
 				{
-					songs != undefined ? songs.map(song => {
+					songs != undefined ? songs.map((song, index) => {
 						return <PlaylistItem 
-										style={{ fontFamily: 'SanomatSansRegular'}}
-										key={song.title}
+										key={index}
+										songIndex={index}
 										title={song.title}
 										author={song.author}
 										thumbnails={song.thumbnails}
+										onClick={this.handlePlaySong}
 									/>
-					}) : <PlaylistItem thumbnails='https://i.pinimg.com/564x/bd/2b/50/bd2b502137f9397cb0edd383ce9d130c.jpg' title='Kanna The Cute Dragon' author='kanna' />
+					}) : <Text style={{ paddingTop: 10 }}>Playlist is empty</Text>
 				}
 			</View>
     );

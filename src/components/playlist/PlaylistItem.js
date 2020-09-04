@@ -1,18 +1,21 @@
 import React, { Component } from 'react'
-import { StyleSheet, View, Text, Image } from 'react-native'
+import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 
 export default class PlaylistItem extends Component {
+  handlePlaySong = () => {
+    this.props.onClick(this.props.songIndex)
+  }
   render() {
     return (
-      <View style={styles.itemWrapper}>
+      <TouchableOpacity onPress={this.handlePlaySong} style={styles.itemWrapper}>
         <Image style={styles.thumbnails} source={{ uri: this.props.thumbnails }}/>
         <View style={styles.textWrapper}>
           <Text style={styles.title}>{`${this.props.title.substring(0, 50)}...`}</Text>
           <Text style={styles.author}>{`${this.props.author}`}</Text>
         </View>
         <Ionicons name='ios-more' size={20} color='#444' style={styles.more}/>
-      </View>
+      </TouchableOpacity>
     )
   }
 }
@@ -38,9 +41,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
+    fontFamily: 'SanomatSansRegular',
     lineHeight: 20
   },
   author: {
+    fontFamily: 'SanomatSansRegular',
     paddingTop: 2
   },
   more: {

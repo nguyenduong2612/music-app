@@ -1,10 +1,7 @@
 import { Audio } from 'expo-av'
-import { AppLoading } from 'expo'
 import React, { Component } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard, Button, StatusBar } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard } from 'react-native'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
-import { setCustomText } from 'react-native-global-props';
-import * as Font from 'expo-font'
 import YouTubeAPI from 'youtube-api-search'
 import Youtube from 'youtube-stream-url'
 import { YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2 } from '@env';
@@ -17,8 +14,6 @@ export default class Home extends Component {
     this.state = {
       loopMode: 'one',
       isShuffle: false,
-      isModalVisible: false,
-      isfontsLoaded: false,
       search: "",
       isPlaying: false,
       playbackInstance: null,
@@ -28,17 +23,12 @@ export default class Home extends Component {
   }
 
   componentDidMount = async() => {
-    await Font.loadAsync({
-			'SanomatSansLight': require('../../../assets/fonts/sanomat-sans-cufonfonts/Sanomat-SansLight.otf'),
-      'SanomatSansRegular': require('../../../assets/fonts/sanomat-sans-cufonfonts/Sanomat-SansRegular.otf'),
-      'SanomatSansBold': require('../../../assets/fonts/sanomat-sans-cufonfonts/Sanomat-SansBold.otf'),
-    })
-    this.setState({ isfontsLoaded: true });
-		setCustomText({ 
-			style: { 
-				fontFamily: 'SanomatSansRegular'
-			}
-		})
+    this.focusListener = this.props.navigation.addListener('focus', () => {   //handle click from playlist
+      if (this.props.route.params != undefined && this.props.route.params.click == true) {
+        this.handlePlaySongFromPlaylist()
+        this.props.route.params.click = false
+      }
+    });
     try {
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -68,7 +58,7 @@ export default class Home extends Component {
     }
   };
 
-  async loadAudio() {
+  loadAudio = async() => {
     const {currentIndex, isPlaying} = this.state
 
     try {
@@ -80,7 +70,7 @@ export default class Home extends Component {
       const status = {
         shouldPlay: isPlaying
       }
-  
+
       playbackInstance.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)     
       await playbackInstance.loadAsync(source, status, false)
       this.setState({playbackInstance})
@@ -89,11 +79,18 @@ export default class Home extends Component {
     }
   }
 
-  // toggleModal = () => {
-  //   this.setState(prevState => ({
-  //     isModalVisible: !prevState.isModalVisible
-  //   }));
-  // };
+  handlePlaySongFromPlaylist = async() => {
+    let { playbackInstance } = this.state
+    let songIndex = this.props.route.params.songIndex
+    await playbackInstance.unloadAsync()
+
+    this.setState({ currentIndex: songIndex })
+    this.loadAudio().then(() => {
+      let { playbackInstance } = this.state
+      playbackInstance.playAsync()
+      this.setState({ isPlaying: true })
+    })
+  }
 
   updateSearch = (search) => {
     this.setState({ search });
@@ -131,9 +128,10 @@ export default class Home extends Component {
                 songs
               }}, () => {
                 console.log(this.state.songs)
-                this.props.navigation.navigate('Playlist', {  
+                const { navigate } = this.props.navigation;
+                navigate('Playlist', {  
                   songs: this.state.songs
-                })  
+                })
                 if (!isPlaying) {
                   try {
                     this.loadAudio().then(() => {
@@ -147,7 +145,6 @@ export default class Home extends Component {
                 }
               }
             );
-
           })
       })
     }
@@ -222,9 +219,6 @@ export default class Home extends Component {
 
 
   render() {
-    if (!this.state.isfontsLoaded) {
-      return <AppLoading />
-    }
     let { currentIndex , songs } = this.state
     if (songs[currentIndex] != undefined) {
       var thumbnails = songs[currentIndex].thumbnails
@@ -235,7 +229,6 @@ export default class Home extends Component {
     }
     return (
       <View style={styles.container}>
-        <StatusBar backgroundColor='#c6afd1' barStyle='light-content' />
         <TextInput
           style={styles.searchbar}
           placeholder="Adding a song"
