@@ -35,7 +35,7 @@ export default class Playlist extends Component {
 										thumbnails={song.thumbnails}
 										onClick={this.handlePlaySong}
 									/>
-					}) : <Text style={{ paddingTop: 10 }}>Playlist is empty</Text>
+					}) : <Text style={{ paddingTop: 10, fontFamily: 'SanomatSansRegular' }}>Playlist is empty</Text>
 				}
 			</View>
     );

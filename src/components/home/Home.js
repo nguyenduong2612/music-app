@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard } from 'react-native'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import YouTubeAPI from 'youtube-api-search'
-import Youtube from 'youtube-stream-url'
+import ytdl from "react-native-ytdl"
 import { YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2 } from '@env';
 
 const keylist = [YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2];
@@ -96,56 +96,56 @@ export default class Home extends Component {
     this.setState({ search });
   };
 
-  handleSearch = async(e) => { 
+  handleSearch = (e) => { 
     if (this.state.search.trim() !== '' && this.state.search.trim() !== ' ') {
       Keyboard.dismiss()
       const ytKey = keylist[Math.floor(Math.random() * keylist.length)];
 
-      YouTubeAPI({key: ytKey, term: this.state.search}, (videos) => {
+      YouTubeAPI({key: ytKey, term: this.state.search}, async(videos) => {
         const videoId = videos[0].id.videoId
         this.setState({
           search: ''
         })
         let ytUrl = `https://www.youtube.com/watch?v=${videoId}`
-        console.log(ytUrl)
+        //console.log(videoId)
 
-        Youtube.getInfo({url: ytUrl})
-          .then(async(video) => {
-            console.log(video)
-            const uri = video.formats[0].url
-            const { isPlaying } = this.state
+        let info = await ytdl.getInfo(ytUrl)
+        let audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
+        //console.log(audioFormats)
 
-            const song = {
-              thumbnails: videos[0].snippet.thumbnails.medium.url,
-              uri: video.formats[0].url,
-              title:  videos[0].snippet.title,
-              author: videos[0].snippet.channelTitle
-            }
+        const { isPlaying } = this.state
 
-            this.setState(prevState => { 
-              const songs = prevState.songs.concat(song)
-              return {
-                songs
-              }}, () => {
-                console.log(this.state.songs)
-                const { navigate } = this.props.navigation;
-                navigate('Playlist', {  
-                  songs: this.state.songs
+        const song = {
+          thumbnails: videos[0].snippet.thumbnails.medium.url,
+          uri: audioFormats[0].url,
+          title:  videos[0].snippet.title,
+          author: videos[0].snippet.channelTitle
+        }
+
+        this.setState(prevState => { 
+          const songs = prevState.songs.concat(song)
+          return {
+            songs
+          }}, () => {
+            console.log(this.state.songs)
+            const { navigate } = this.props.navigation;
+            navigate('Playlist', {  
+              songs: this.state.songs
+            })
+            if (!isPlaying) {
+              try {
+                this.loadAudio().then(() => {
+                  const { playbackInstance } = this.state
+                  playbackInstance.playAsync()
+                  this.setState({ isPlaying: true })
                 })
-                if (!isPlaying) {
-                  try {
-                    this.loadAudio().then(() => {
-                      const { playbackInstance } = this.state
-                      playbackInstance.playAsync()
-                      this.setState({ isPlaying: true })
-                    })
-                  } catch (e) {
-                    console.log(e);
-                  };
-                }
-              }
-            );
-          })
+              } catch (e) {
+                console.log(e);
+              };
+            }
+          }
+        );
+  
       })
     }
   }

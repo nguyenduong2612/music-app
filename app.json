@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "music-app",
-    "slug": "music-app",
+    "name": "Kanna Music",
+    "slug": "kanna-music",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/kanna.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/kanna.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#c6afd1"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -20,7 +20,7 @@
       "supportsTablet": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/kanna.png"
     },
     "android": {
       "package": "com.mycompany.myapp"
