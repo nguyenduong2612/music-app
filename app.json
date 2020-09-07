@@ -1,14 +1,17 @@
 {
   "expo": {
-    "name": "Kanna Music",
+    "name": "Kanna",
     "slug": "kanna-music",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/kanna.png",
     "splash": {
-      "image": "./assets/kanna.png",
+      "image": "./assets/kanna1.png",
       "resizeMode": "contain",
       "backgroundColor": "#c6afd1"
+    },
+    "androidNavigationBar": {
+      "visible": "sticky-immersive"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
