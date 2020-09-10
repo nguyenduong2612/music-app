@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { StatusBar, Alert } from 'react-native'
+import { StatusBar, Alert, YellowBox } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { AppLoading } from 'expo'
@@ -11,16 +11,22 @@ import Home from './src/components/home/Home'
 import Playlist from './src/components/playlist/Playlist'
 import Profile from './src/components/profile/Profile'
 import LoginLoading from './src/components/utils/LoginLoading'
+import database from './src/config/firebaseConfig'
 
 const Tab = createMaterialTopTabNavigator()
 export default class App extends React.Component {
-  state = {
-    isfontsLoaded: false,
-    isLoggedIn: false,
-    userData: null,
-    currentIndex: 0,
-    playbackInstance: null,
-    songs: []
+  constructor (props) {
+    super(props)
+    this.state = {
+      isfontsLoaded: false,
+      isLoggedIn: false,
+      userData: null,
+      currentIndex: 0,
+      playbackInstance: null,
+      songs: [],
+      playlist: []
+    }
+    YellowBox.ignoreWarnings(['Setting a timer']);
   }
 
   facebookLogIn = async() => {
@@ -39,7 +45,10 @@ export default class App extends React.Component {
         // Get the user's name using Facebook's Graph API
         fetch(`https://graph.facebook.com/me?access_token=${token}&fields=id,name,email,picture.height(500)`)
          .then(response => response.json())
-         .then(data => {
+         .then(async(data) => {
+          await database.collection('user_id').doc(data.id).set({
+            loggedIn: true
+          })
           this.setState({ 
             userData: data,
             isLoggedIn: true
@@ -55,6 +64,9 @@ export default class App extends React.Component {
   }
 
   facebookLogout = async() => {
+    await database.collection('user_id').doc(this.state.userData.id).set({
+      loggedIn: false
+    })
     this.setState({ 
       userData: null,
       isLoggedIn: false
