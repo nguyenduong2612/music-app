@@ -113,7 +113,8 @@ export default class Home extends Component {
 
   handlePlayPause = async() => {
     let { isPlaying } = this.state
-    let { playbackInstance } = this.props
+    let { playbackInstance, songs } = this.props
+    if (songs.length == 0) return
     if (!playbackInstance) {
       this.loadAudio()
     } else {
@@ -124,6 +125,7 @@ export default class Home extends Component {
 
   handlePreviousTrack = async () => {
     let {currentIndex, songs, playbackInstance} = this.props
+    if (songs.length == 0) return
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
     }
@@ -135,6 +137,7 @@ export default class Home extends Component {
 
   handleNextTrack = async() => {
     let {currentIndex, songs, playbackInstance} = this.props
+    if (songs.length == 0) return
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
     }

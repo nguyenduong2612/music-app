@@ -44,10 +44,19 @@ export default class App extends React.Component {
         // Get the user's name using Facebook's Graph API
         fetch(`https://graph.facebook.com/me?access_token=${token}&fields=id,name,email,picture.height(500)`)
          .then(response => response.json())
-         .then(async(data) => {
-          await database.collection('user_id').doc(data.id).update({
-            loggedIn: true
-          })
+         .then(async(data) => { 
+          let userRef = await database.collection('user_id').doc(data.id).get()
+          if (!userRef.exists) {
+            await database.collection('user_id').doc(data.id).set({
+              loggedIn: true,
+              currentIndex: 0,
+              songs: []
+            })
+          } else {
+            await database.collection('user_id').doc(data.id).update({
+              loggedIn: true
+            })
+          }
           this.setState({ 
             userData: data,
             isLoggedIn: true
