@@ -10,8 +10,10 @@ export default class Playlist extends Component {
 	handlePlaySong = async(songIndex) => {
 		const {playbackInstance} = this.props
 
-		await playbackInstance.unloadAsync()
-
+		if (playbackInstance) {
+			await playbackInstance.unloadAsync()
+		}
+		
 		const source = {
 			uri: this.props.songs[songIndex].uri
 		}

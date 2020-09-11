@@ -60,11 +60,13 @@ export default class Home extends Component {
       }
   
       const status = {
-        shouldPlay: isPlaying
+        shouldPlay: true
       }
 
       playbackInstance.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)     
       await playbackInstance.loadAsync(source, status, false)
+      
+      this.setState({ isPlaying: true })
       this.props.updatePlaybackInstance(playbackInstance)
     } catch (e) {
       console.log(e)
@@ -105,14 +107,6 @@ export default class Home extends Component {
         this.props.updateSongs(songs.concat(song))
         console.log(this.props.songs)
 
-        if (!isPlaying) { 
-          this.loadAudio().then(() => {
-            const { playbackInstance } = this.props
-            playbackInstance.playAsync()
-            this.setState({ isPlaying: true })
-          })
-        }
-
       })
     }
   }
@@ -120,46 +114,42 @@ export default class Home extends Component {
   handlePlayPause = async() => {
     let { isPlaying } = this.state
     let { playbackInstance } = this.props
-    if (!playbackInstance) return
-    isPlaying ? await playbackInstance.pauseAsync() : await playbackInstance.playAsync()
-
-    this.setState({ isPlaying: !isPlaying })
+    if (!playbackInstance) {
+      this.loadAudio()
+    } else {
+      isPlaying ? await playbackInstance.pauseAsync() : await playbackInstance.playAsync()
+      this.setState({ isPlaying: !isPlaying })
+    }
   }
 
   handlePreviousTrack = async () => {
     let {currentIndex, songs, playbackInstance} = this.props
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
-      currentIndex > 0 ? (currentIndex -= 1) : (currentIndex = songs.length - 1)
-      this.props.updateCurrentIndex(currentIndex)
-      this.loadAudio().then(() => {
-        let { playbackInstance } = this.props
-        playbackInstance.playAsync()
-        this.setState({ isPlaying: true })
-      })
     }
+    currentIndex > 0 ? (currentIndex -= 1) : (currentIndex = songs.length - 1)
+    await this.props.updateCurrentIndex(currentIndex)
+
+    this.loadAudio()
   }
 
   handleNextTrack = async() => {
     let {currentIndex, songs, playbackInstance} = this.props
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
-      if (this.state.isShuffle) {
-        let indexArray = [...Array(songs.length).keys()]      //create index array [0...songs.length]
-        indexArray.splice(currentIndex, 1)                    //remove index of current song
-        currentIndex = indexArray[Math.floor(Math.random() * indexArray.length)]    //get new random index from the array
-        this.props.updateCurrentIndex(currentIndex)
-      } else {
-        currentIndex < songs.length - 1 ? (currentIndex += 1) : (currentIndex = 0)
-        this.props.updateCurrentIndex(currentIndex)
-      }
-
-      this.loadAudio().then(() => {
-        let { playbackInstance } = this.props
-        playbackInstance.playAsync()
-        this.setState({ isPlaying: true })
-      })
     }
+
+    if (this.state.isShuffle) {
+      let indexArray = [...Array(songs.length).keys()]      //create index array [0...songs.length]
+      indexArray.splice(currentIndex, 1)                    //remove index of current song
+      currentIndex = indexArray[Math.floor(Math.random() * indexArray.length)]    //get new random index from the array
+      await this.props.updateCurrentIndex(currentIndex)
+    } else {
+      currentIndex < songs.length - 1 ? (currentIndex += 1) : (currentIndex = 0)
+      await this.props.updateCurrentIndex(currentIndex)
+    }
+
+    this.loadAudio()
   }
 
   handleChangeloopMode = () => {

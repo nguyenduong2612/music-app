@@ -23,8 +23,7 @@ export default class App extends React.Component {
       userData: null,
       currentIndex: 0,
       playbackInstance: null,
-      songs: [],
-      playlist: []
+      songs: []
     }
     YellowBox.ignoreWarnings(['Setting a timer']);
   }
@@ -46,13 +45,14 @@ export default class App extends React.Component {
         fetch(`https://graph.facebook.com/me?access_token=${token}&fields=id,name,email,picture.height(500)`)
          .then(response => response.json())
          .then(async(data) => {
-          await database.collection('user_id').doc(data.id).set({
+          await database.collection('user_id').doc(data.id).update({
             loggedIn: true
           })
           this.setState({ 
             userData: data,
             isLoggedIn: true
           })
+          this.getData()
         })
         .catch(e => console.log(e))
       } else {
@@ -64,7 +64,7 @@ export default class App extends React.Component {
   }
 
   facebookLogout = async() => {
-    await database.collection('user_id').doc(this.state.userData.id).set({
+    await database.collection('user_id').doc(this.state.userData.id).update({
       loggedIn: false
     })
     this.setState({ 
@@ -78,6 +78,15 @@ export default class App extends React.Component {
     await playbackInstance.pauseAsync()
     this.setState({ playbackInstance })
   }
+
+  getData = async() => {
+    let userRef = await database.collection('user_id').doc(this.state.userData.id).get()
+
+    this.setState({
+      currentIndex: userRef.data().currentIndex,
+      songs: userRef.data().songs
+    })
+  }
   
   componentDidMount = async() => {
     await Font.loadAsync({
@@ -87,6 +96,20 @@ export default class App extends React.Component {
     })
     this.setState({ isfontsLoaded: true });
     this.facebookLogIn()
+  }
+
+  updateCurrentIndex = async(currentIndex) => {
+    this.setState({currentIndex})
+    database.collection('user_id').doc(this.state.userData.id).update({
+      currentIndex: currentIndex
+    })
+  }
+
+  updateSongs = async(songs) => {
+    this.setState({songs})
+    database.collection('user_id').doc(this.state.userData.id).update({
+      songs: songs
+    })
   }
 
   render() {
@@ -121,9 +144,10 @@ export default class App extends React.Component {
                 <Home
                   currentIndex={this.state.currentIndex}
                   songs={this.state.songs}
+                  playlist={this.state.playlist}
                   playbackInstance={this.state.playbackInstance}
-                  updateCurrentIndex={(currentIndex) => this.setState({currentIndex})}
-                  updateSongs={(songs) => this.setState({songs})} 
+                  updateCurrentIndex={this.updateCurrentIndex}
+                  updateSongs={this.updateSongs} 
                   updatePlaybackInstance={(playbackInstance) => this.setState({playbackInstance})} 
                 />)
               }
@@ -135,8 +159,8 @@ export default class App extends React.Component {
                   currentIndex={this.state.currentIndex}
                   songs={this.state.songs}
                   playbackInstance={this.state.playbackInstance}
-                  updateCurrentIndex={(currentIndex) => this.setState({currentIndex})}
-                  updateSongs={(songs) => this.setState({songs})}
+                  updateCurrentIndex={this.updateCurrentIndex}
+                  updateSongs={this.updateSongs}
                   updatePlaybackInstance={(playbackInstance) => this.setState({playbackInstance})} 
                 />)
               }
