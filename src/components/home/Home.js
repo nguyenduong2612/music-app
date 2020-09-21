@@ -1,6 +1,6 @@
 import { Audio } from 'expo-av'
 import React, { Component } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard, Dimensions } from 'react-native'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import YouTubeAPI from 'youtube-api-search'
 import ytdl from "react-native-ytdl"
@@ -200,7 +200,7 @@ export default class Home extends Component {
           source={{ uri: thumbnails }}
         />
         <View style={styles.trackInfo}>
-          <Text style={[styles.trackInfoText, styles.largeText]}>
+          <Text numberOfLines={3} ellipsizeMode='tail' style={[styles.trackInfoText, styles.largeText]}>
             {title}
           </Text>
         </View> 
@@ -252,19 +252,20 @@ export default class Home extends Component {
   };
 };
 
+const height = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   searchbtn: {
     position: 'absolute',
-    top: 25,
+    top: height * 0.025,
     right: 20
   },
   searchbar: {
-    fontSize: 18,
+    fontSize: height * 0.025,
     fontFamily: 'SanomatSansRegular',
     paddingVertical: 15,
     paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: height * 0.01,
+    marginBottom: height * 0.01,
     width: "100%"
   },
   container: {
@@ -273,15 +274,16 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   albumCover: {
-    width: 260,
-    height: 260,
+    width: height * 0.34,
+    aspectRatio: 1,
     borderRadius: 25
   },
   controls: {
     flexDirection: 'row'
   },
   control: {
-    margin: 20
+    marginHorizontal: 20,
+    marginVertical: height * 0.04
   },
   controlbtn: {
     lineHeight: 82
@@ -298,19 +300,19 @@ const styles = StyleSheet.create({
     color: '#444'
   },
   largeText: {
-    fontSize: 20,
+    fontSize: height * 0.0275,
     fontFamily: 'SanomatSansBold',
     textAlign: 'center',
-    lineHeight: 25,
-    marginTop: 50
+    lineHeight: height * 0.035,
+    minHeight: 70,
+    marginTop: height * 0.06
   },
   trackInfo: {
-    width: '70%',
-    minHeight: '20%'
+    width: '70%'
   },
   bottomBar: {
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: height * 0.01,
     flexDirection: 'row'
   },
   bottomBarItem: {

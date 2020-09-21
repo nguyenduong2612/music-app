@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text } from 'react-native'
+import { StyleSheet, ScrollView, Text } from 'react-native'
 import PlaylistItem from './PlaylistItem'
 
 export default class Playlist extends Component {
@@ -43,7 +43,7 @@ export default class Playlist extends Component {
 
 	render() {		
     return (
-			<View style={{ flex: 1, alignItems: 'center', paddingTop: 10, backgroundColor: '#fff' }}>
+			<ScrollView contentContainerStyle={styles.container}>
 				{
 					this.props.songs.length != 0 ? this.props.songs.map((song, index) => {
 						return <PlaylistItem 
@@ -57,7 +57,15 @@ export default class Playlist extends Component {
 									/>
 					}) : <Text style={{ paddingTop: 10, fontFamily: 'SanomatSansRegular' }}>Playlist is empty</Text>
 				}
-			</View>
+			</ScrollView>
     );
   }
 }
+
+const styles = StyleSheet.create({
+	container: {
+		alignItems: 'center', 
+		paddingVertical: 10, 
+		backgroundColor: '#fff'
+	}
+})
