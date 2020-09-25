@@ -124,18 +124,27 @@ export default class Home extends Component {
     }
   }
 
+  lastTap = null;
   handlePreviousTrack = async () => {
     let {currentIndex, songs, playbackInstance, nowPlaying} = this.props
     if (songs.length == 0) return
     if (!nowPlaying) return
 
-    if (playbackInstance != null) {
-      await playbackInstance.unloadAsync()
+    const now = Date.now()
+    const DOUBLE_PRESS_DELAY = 400;
+    if (this.lastTap && (now - this.lastTap) < DOUBLE_PRESS_DELAY) {    // double tap
+      if (playbackInstance != null) {
+        await playbackInstance.unloadAsync()
+      }
+      currentIndex > 0 ? (currentIndex -= 1) : (currentIndex = songs.length - 1)
+  
+      this.loadAudio(songs[currentIndex])
+      this.props.updateCurrentIndex(currentIndex)
+    } else {    // single tap
+      this.lastTap = now
+      playbackInstance.replayAsync()
     }
-    currentIndex > 0 ? (currentIndex -= 1) : (currentIndex = songs.length - 1)
 
-    this.loadAudio(songs[currentIndex])
-    this.props.updateCurrentIndex(currentIndex)
   }
 
   handleNextTrack = async() => {
