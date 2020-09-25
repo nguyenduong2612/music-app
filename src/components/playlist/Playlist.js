@@ -8,9 +8,13 @@ export default class Playlist extends Component {
 	}
 	
 	handlePlaySong = async(songIndex) => {
-		const {playbackInstance} = this.props
+		const {playbackInstance, songs} = this.props
+		this.props.updateNowPlaying(songs[songIndex])
+		this.props.updateCurrentIndex(songIndex)
+		this.props.updateSongs(songs)
+		this.props.updateIsPlaying(true)
 
-		if (playbackInstance) {
+		if (playbackInstance != null) {
 			await playbackInstance.unloadAsync()
 		}
 		
@@ -24,7 +28,7 @@ export default class Playlist extends Component {
   
 		await playbackInstance.loadAsync(source, status, false)
 		this.props.updatePlaybackInstance(playbackInstance)
-		this.props.updateCurrentIndex(songIndex)
+		
 	}
 
 	handleRemoveSong = (songIndex) => {
@@ -32,13 +36,10 @@ export default class Playlist extends Component {
 
 		if (songIndex < currentIndex) {
 			currentIndex -= 1
-		} else if (songIndex == currentIndex) {
-			return
 		}
 
 		songs.splice(songIndex, 1)
-		this.props.updateCurrentIndex(currentIndex)
-		this.props.updateSongs(songs)
+		this.props.updateSongs(songs, false)
 	}
 
 	render() {		

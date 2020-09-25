@@ -23,7 +23,9 @@ export default class App extends React.Component {
       userData: null,
       currentIndex: 0,
       playbackInstance: null,
-      songs: []
+      isPlaying: false,
+      songs: [],
+      nowPlaying: null
     }
     YellowBox.ignoreWarnings(['Setting a timer']);
   }
@@ -50,7 +52,8 @@ export default class App extends React.Component {
             await database.collection('user_id').doc(data.id).set({
               loggedIn: true,
               currentIndex: 0,
-              songs: []
+              songs: [],
+              nowPlaying: null
             })
           } else {
             await database.collection('user_id').doc(data.id).update({
@@ -93,7 +96,8 @@ export default class App extends React.Component {
 
     this.setState({
       currentIndex: userRef.data().currentIndex,
-      songs: userRef.data().songs
+      songs: userRef.data().songs,
+      nowPlaying: userRef.data().nowPlaying
     })
   }
   
@@ -107,7 +111,14 @@ export default class App extends React.Component {
     this.facebookLogIn()
   }
 
-  updateCurrentIndex = async(currentIndex) => {
+  updateNowPlaying = async(nowPlaying) => {
+    this.setState({nowPlaying})
+    database.collection('user_id').doc(this.state.userData.id).update({
+      nowPlaying: nowPlaying
+    })
+  }
+
+  updateCurrentIndex= async(currentIndex) => {
     this.setState({currentIndex})
     database.collection('user_id').doc(this.state.userData.id).update({
       currentIndex: currentIndex
@@ -152,10 +163,14 @@ export default class App extends React.Component {
               children={() => (
                 <Home
                   currentIndex={this.state.currentIndex}
+                  isPlaying={this.state.isPlaying}
                   songs={this.state.songs}
+                  nowPlaying={this.state.nowPlaying}
                   playlist={this.state.playlist}
                   playbackInstance={this.state.playbackInstance}
                   updateCurrentIndex={this.updateCurrentIndex}
+                  updateNowPlaying={this.updateNowPlaying}
+                  updateIsPlaying={(isPlaying) => this.setState({isPlaying})}
                   updateSongs={this.updateSongs} 
                   updatePlaybackInstance={(playbackInstance) => this.setState({playbackInstance})} 
                 />)
@@ -166,9 +181,12 @@ export default class App extends React.Component {
               children={() => (
                 <Playlist
                   currentIndex={this.state.currentIndex}
+                  isPlaying={this.state.isPlaying}
                   songs={this.state.songs}
                   playbackInstance={this.state.playbackInstance}
                   updateCurrentIndex={this.updateCurrentIndex}
+                  updateNowPlaying={this.updateNowPlaying}
+                  updateIsPlaying={(isPlaying) => this.setState({isPlaying})}
                   updateSongs={this.updateSongs}
                   updatePlaybackInstance={(playbackInstance) => this.setState({playbackInstance})} 
                 />)

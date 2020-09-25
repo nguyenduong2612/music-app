@@ -13,8 +13,7 @@ export default class Home extends Component {
     this.state = {
       loopMode: 'one',
       isShuffle: false,
-      search: "",
-      isPlaying: false
+      search: ""
     }
   }
 
@@ -40,7 +39,7 @@ export default class Home extends Component {
     if (playbackStatus.didJustFinish) {
       if (loopMode == 'off') {
         await playbackInstance.pauseAsync()
-        this.setState({ isPlaying: false })
+        this.props.updateIsPlaying(false)
       } else if (loopMode == 'all') {
         this.handleNextTrack()
       } else if (loopMode == 'one') {
@@ -49,14 +48,14 @@ export default class Home extends Component {
     }
   };
 
-  loadAudio = async() => {
-    const {isPlaying} = this.state
-    const {currentIndex} = this.props
-
+  loadAudio = async(song) => {
     try {
+      this.props.updateNowPlaying(song)
+      this.props.updateIsPlaying(true)
+
       const playbackInstance = new Audio.Sound()
       const source = {
-        uri: this.props.songs[currentIndex].uri
+        uri: song.uri
       }
   
       const status = {
@@ -66,7 +65,6 @@ export default class Home extends Component {
       playbackInstance.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)     
       await playbackInstance.loadAsync(source, status, false)
       
-      this.setState({ isPlaying: true })
       this.props.updatePlaybackInstance(playbackInstance)
     } catch (e) {
       console.log(e)
@@ -94,8 +92,7 @@ export default class Home extends Component {
         let audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
         //console.log(audioFormats)
 
-        const { isPlaying } = this.state
-        const {songs} = this.props
+        const {songs, nowPlaying} = this.props
 
         const song = {
           thumbnails: videos[0].snippet.thumbnails.medium.url,
@@ -103,7 +100,11 @@ export default class Home extends Component {
           title:  videos[0].snippet.title,
           author: videos[0].snippet.channelTitle
         }
-        
+
+        if (!nowPlaying) {
+          this.loadAudio(song)
+        }
+  
         this.props.updateSongs(songs.concat(song))
         console.log(this.props.songs)
 
@@ -112,32 +113,36 @@ export default class Home extends Component {
   }
 
   handlePlayPause = async() => {
-    let { isPlaying } = this.state
-    let { playbackInstance, songs } = this.props
-    if (songs.length == 0) return
-    if (!playbackInstance) {
-      this.loadAudio()
+    let { playbackInstance, songs, isPlaying, nowPlaying } = this.props
+    if (!nowPlaying) return
+
+    if (playbackInstance == null) {
+      this.loadAudio(nowPlaying)
     } else {
       isPlaying ? await playbackInstance.pauseAsync() : await playbackInstance.playAsync()
-      this.setState({ isPlaying: !isPlaying })
+      this.props.updateIsPlaying(!isPlaying)
     }
   }
 
   handlePreviousTrack = async () => {
-    let {currentIndex, songs, playbackInstance} = this.props
+    let {currentIndex, songs, playbackInstance, nowPlaying} = this.props
     if (songs.length == 0) return
-    if (playbackInstance) {
+    if (!nowPlaying) return
+
+    if (playbackInstance != null) {
       await playbackInstance.unloadAsync()
     }
     currentIndex > 0 ? (currentIndex -= 1) : (currentIndex = songs.length - 1)
-    await this.props.updateCurrentIndex(currentIndex)
 
-    this.loadAudio()
+    this.loadAudio(songs[currentIndex])
+    this.props.updateCurrentIndex(currentIndex)
   }
 
   handleNextTrack = async() => {
-    let {currentIndex, songs, playbackInstance} = this.props
+    let {currentIndex, songs, playbackInstance, nowPlaying} = this.props
     if (songs.length == 0) return
+    if (!nowPlaying) return
+
     if (playbackInstance) {
       await playbackInstance.unloadAsync()
     }
@@ -146,13 +151,14 @@ export default class Home extends Component {
       let indexArray = [...Array(songs.length).keys()]      //create index array [0...songs.length]
       indexArray.splice(currentIndex, 1)                    //remove index of current song
       currentIndex = indexArray[Math.floor(Math.random() * indexArray.length)]    //get new random index from the array
-      await this.props.updateCurrentIndex(currentIndex)
+      //await this.props.updateNowPlaying(songs[currentIndex])
     } else {
       currentIndex < songs.length - 1 ? (currentIndex += 1) : (currentIndex = 0)
-      await this.props.updateCurrentIndex(currentIndex)
+      //await this.props.updateNowPlaying(songs[currentIndex])
     }
 
-    this.loadAudio()
+    this.loadAudio(songs[currentIndex])
+    this.props.updateCurrentIndex(currentIndex)
   }
 
   handleChangeloopMode = () => {
@@ -173,10 +179,10 @@ export default class Home extends Component {
   }
 
   render() {
-    let { currentIndex , songs } = this.props
-    if (songs[currentIndex] != undefined) {
-      var thumbnails = songs[currentIndex].thumbnails
-      var title = songs[currentIndex].title
+    let { currentIndex , songs, nowPlaying } = this.props
+    if (nowPlaying) {
+      var thumbnails = nowPlaying.thumbnails
+      var title = nowPlaying.title
     } else {
       var thumbnails = 'https://i.pinimg.com/564x/bd/2b/50/bd2b502137f9397cb0edd383ce9d130c.jpg'
       var title = 'Kanna The Cute Dragon'
@@ -209,7 +215,7 @@ export default class Home extends Component {
             <Ionicons name='ios-skip-backward' size={40} color='#444' style={styles.controlbtn} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.control} onPress={this.handlePlayPause}>
-            {this.state.isPlaying ? (
+            {this.props.isPlaying ? (
               <Ionicons name='md-pause' size={50} color='#444' style={styles.pausebtn} />
                 ) : (
               <Ionicons name='ios-play-circle' size={80} color='#444' />
