@@ -33,6 +33,7 @@
     "react-native-ytdl": "^3.2.2",
     "react-navigation": "^4.4.0",
     "react-navigation-tabs": "^2.9.0",
+    "rn-sliding-up-panel": "^2.4.3",
     "youtube-api-search": "0.0.5",
     "youtube-stream-url": "^2.0.1"
   },

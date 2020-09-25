@@ -1,10 +1,12 @@
 import { Audio } from 'expo-av'
 import React, { Component } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard, Dimensions } from 'react-native'
+import SlidingUpPanel from 'rn-sliding-up-panel'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import YouTubeAPI from 'youtube-api-search'
-import ytdl from "react-native-ytdl"
 import { YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2 } from '@env';
+
+import SearchResult from './SearchResult'
 
 const keylist = [YOUTUBE_API_KEY, YOUTUBE_API_KEY_1, YOUTUBE_API_KEY_2];
 export default class Home extends Component { 
@@ -13,7 +15,8 @@ export default class Home extends Component {
     this.state = {
       loopMode: 'one',
       isShuffle: false,
-      search: ""
+      search: "",
+      videos: []
     }
   }
 
@@ -78,38 +81,26 @@ export default class Home extends Component {
   handleSearch = (e) => { 
     if (this.state.search.trim() !== '' && this.state.search.trim() !== ' ') {
       Keyboard.dismiss()
+      this._panel.show()
       const ytKey = keylist[Math.floor(Math.random() * keylist.length)];
 
       YouTubeAPI({key: ytKey, term: this.state.search}, async(videos) => {
-        const videoId = videos[0].id.videoId
         this.setState({
+          videos,
           search: ''
         })
-        let ytUrl = `https://www.youtube.com/watch?v=${videoId}`
-        //console.log(videoId)
-
-        let info = await ytdl.getInfo(ytUrl)
-        let audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
-        //console.log(audioFormats)
-
-        const {songs, nowPlaying} = this.props
-
-        const song = {
-          thumbnails: videos[0].snippet.thumbnails.medium.url,
-          uri: audioFormats[0].url,
-          title:  videos[0].snippet.title,
-          author: videos[0].snippet.channelTitle
-        }
-
-        if (!nowPlaying) {
-          this.loadAudio(song)
-        }
-  
-        this.props.updateSongs(songs.concat(song))
-        console.log(this.props.songs)
-
       })
     }
+  }
+
+  addSongToPlaylist = (song) => {
+    const {songs, nowPlaying} = this.props
+    if (!nowPlaying) {
+      this.loadAudio(song)
+    }
+
+    this.props.updateSongs(songs.concat(song))
+    console.log(this.props.songs)
   }
 
   handlePlayPause = async() => {
@@ -207,7 +198,7 @@ export default class Home extends Component {
           value={this.state.search}
         />
         <TouchableOpacity style={styles.searchbtn} onPress={this.handleSearch}>
-          <Ionicons name='ios-add' size={40} color='#444' />
+          <Ionicons name='ios-search' size={36} color='#444' />
         </TouchableOpacity>
 
         <Image
@@ -262,6 +253,15 @@ export default class Home extends Component {
             <Ionicons name="ios-more" size={25} color="#444" />
           </TouchableOpacity>
         </View>
+        
+        <SlidingUpPanel ref={c => this._panel = c} friction={0.75} draggableRange={{top: height / 1.35, bottom: 0}} >
+          <SearchResult 
+            videos={this.state.videos}
+            addSongToPlaylist={this.addSongToPlaylist}
+            closePopup={() => this._panel.hide()}
+          />
+        </SlidingUpPanel>
+        
       </View>
     )
   };
