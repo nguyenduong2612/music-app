@@ -1,6 +1,7 @@
 import { Audio } from 'expo-av'
 import React, { Component } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Keyboard, Dimensions } from 'react-native'
+import Toast, {DURATION} from 'react-native-easy-toast'
 import SlidingUpPanel from 'rn-sliding-up-panel'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import YouTubeAPI from 'youtube-api-search'
@@ -18,6 +19,7 @@ export default class Home extends Component {
       search: "",
       videos: []
     }
+    this.TOAST_DURATION = 2500
   }
 
   componentDidMount = async() => {
@@ -94,6 +96,8 @@ export default class Home extends Component {
   }
 
   addSongToPlaylist = (song) => {
+    this.refs.toast.show('Added successfully', this.TOAST_DURATION);
+
     const {songs, nowPlaying} = this.props
     if (!nowPlaying) {
       this.loadAudio(song)
@@ -167,15 +171,21 @@ export default class Home extends Component {
     let modeIndex = loopModeList.indexOf(loopMode)
 
     modeIndex < loopModeList.length - 1 ? (modeIndex += 1) : (modeIndex = 0)
-    this.setState({
-      loopMode: loopModeList[modeIndex]
+    this.setState({ loopMode: loopModeList[modeIndex] }, () => {
+      let { loopMode } = this.state
+      loopMode == 'all' ? this.refs.toast.show('Loop all', this.TOAST_DURATION) :
+      loopMode == 'one' ? this.refs.toast.show('Loop one', this.TOAST_DURATION) : this.refs.toast.show('Loop off', this.TOAST_DURATION)
     })
   }
 
   handleChangeShuffle = () => {
     let { isShuffle } = this.state
 
-    this.setState({ isShuffle: !isShuffle })
+    this.setState({ isShuffle: !isShuffle }, () => {
+      let { isShuffle } = this.state
+
+      isShuffle ? this.refs.toast.show('Shuffle on', this.TOAST_DURATION) : this.refs.toast.show('Shuffle off', this.TOAST_DURATION) 
+    })
   }
 
   render() {
@@ -261,7 +271,12 @@ export default class Home extends Component {
             closePopup={() => this._panel.hide()}
           />
         </SlidingUpPanel>
-        
+        <Toast 
+					ref="toast"
+					opacity={0.75}
+					positionValue={150}
+          textStyle={styles.toast}
+				/>
       </View>
     )
   };
@@ -334,5 +349,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     marginHorizontal: 5,
     paddingBottom: 10
-  }
+  },
+  toast: {
+		fontFamily: 'SanomatSansRegular',
+		color: 'white',
+		fontSize: 16,
+		paddingHorizontal: 15
+	}
 })

@@ -14,6 +14,7 @@ export default class SearchItem extends Component {
     let audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
 
     const song = {
+      url: ytUrl,
       thumbnails: this.props.thumbnails,
       uri: audioFormats[0].url,
       title:  this.props.title,

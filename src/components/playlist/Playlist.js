@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { StyleSheet, ScrollView, Text } from 'react-native'
+import { StyleSheet, ScrollView, Text, Dimensions } from 'react-native'
+import Toast, {DURATION} from 'react-native-easy-toast'
 import PlaylistItem from './PlaylistItem'
 
 export default class Playlist extends Component {
@@ -40,11 +41,18 @@ export default class Playlist extends Component {
 
 		songs.splice(songIndex, 1)
 		this.props.updateSongs(songs, false)
+		this.refs.toast.show('Removed successfully', 2500);
 	}
 
-	render() {		
+	render() {
     return (
 			<ScrollView contentContainerStyle={styles.container}>
+				<Toast 
+					ref="toast"
+					opacity={0.75}
+					positionValue={150}
+          textStyle={styles.toast}
+				/>
 				{
 					this.props.songs.length != 0 ? this.props.songs.map((song, index) => {
 						return <PlaylistItem 
@@ -55,7 +63,7 @@ export default class Playlist extends Component {
 										thumbnails={song.thumbnails}
 										onPlay={this.handlePlaySong}
 										onRemove={this.handleRemoveSong}
-									/>
+							pad		/>
 					}) : <Text style={{ paddingTop: 10, fontFamily: 'SanomatSansRegular' }}>Playlist is empty</Text>
 				}
 			</ScrollView>
@@ -65,8 +73,15 @@ export default class Playlist extends Component {
 
 const styles = StyleSheet.create({
 	container: {
+		minHeight: Dimensions.get('window').height - 55,
 		alignItems: 'center', 
 		paddingVertical: 10, 
 		backgroundColor: '#fff'
+	},
+	toast: {
+		fontFamily: 'SanomatSansRegular',
+		color: 'white',
+		fontSize: 16,
+		paddingHorizontal: 15
 	}
 })
